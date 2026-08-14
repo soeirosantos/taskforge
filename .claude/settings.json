@@ -8,7 +8,7 @@
     "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4318",
     "OTEL_METRIC_EXPORT_INTERVAL": "5000",
 
-    "OTEL_RESOURCE_ATTRIBUTES": "experiment.arm=main,apparatus.sha=unset"
+    "OTEL_RESOURCE_ATTRIBUTES": "experiment.arm=main,apparatus.sha=e6e3ab5"
   },
   "hooks": {
     "TaskCompleted": [
@@ -17,6 +17,11 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/verify-unit-tests.sh\"",
+            "timeout": 360
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/record-task-event.sh\"",
             "timeout": 360
           }
         ]
