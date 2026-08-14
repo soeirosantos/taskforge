@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  # Prometheus monitors itself.
+  - job_name: "prometheus"
+    static_configs:
+      - targets:
+          - "prometheus:9090"
+
+  # Claude Code experiment metrics, via the OTLP collector.
+  #
+  # Claude Code pushes to the collector on :4318; the collector re-exposes
+  # everything on :9464/metrics for this job to scrape. The collector is
+  # long-lived, so metrics from short `claude -p` runs survive the process
+  # that produced them.
+  #
+  # This target is UP whenever the collector is running, even before any
+  # Claude Code run has reported.
+  - job_name: "claude-code-experiment"
+    scrape_interval: 5s
+    static_configs:
+      - targets:
+          - "otel-collector:9464"

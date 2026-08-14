@@ -1,0 +1,57 @@
+# OpenTelemetry Collector configuration for the bounded-execution experiment.
+#
+# Claude Code runs as short-lived `claude -p` processes. A pull-based Prometheus
+# exporter cannot see them: the process exits long before the next scrape, and
+# concurrent workers would all contend for the same port. So Claude Code pushes
+# to this collector over OTLP, and the collector — which stays up — is what
+# Prometheus scrapes.
+
+receivers:
+  otlp:
+    protocols:
+      http:
+        # Claude Code sends to http://localhost:4318 on the host; the compose
+        # file maps that to this port inside the container.
+        endpoint: 0.0.0.0:4318
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+processors:
+  # Bound memory so a runaway experiment cannot exhaust the container.
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+  batch:
+    timeout: 5s
+    send_batch_size: 1024
+
+exporters:
+  # Exposed for Prometheus to scrape at collector:9464/metrics.
+  prometheus:
+    endpoint: 0.0.0.0:9464
+    # Promote OTEL resource attributes (experiment.arm, apparatus.sha) to
+    # metric labels, so runs can be sliced by experiment arm in Grafana.
+    resource_to_telemetry_conversion:
+      enabled: true
+
+  # Uncomment to see metrics in `docker compose logs otel-collector` while
+  # debugging the pipeline.
+  # debug:
+  #   verbosity: detailed
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [prometheus]
+
+    # Claude Code can also emit logs/events (OTEL_LOGS_EXPORTER=otlp).
+    # Dropped by default: they are noisier than the budget question needs.
+    # To keep them, add a logs exporter and list it here.
+
+  telemetry:
+    logs:
+      level: warn
