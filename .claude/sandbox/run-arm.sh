@@ -21,9 +21,24 @@ cd "$REPO_DIR"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 
-[ -n "${ANTHROPIC_API_KEY:-}" ] || die \
-  "ANTHROPIC_API_KEY is not set. Export it before running:
+# Auth. CLAUDE_CODE_OAUTH_TOKEN is the supported path for Claude subscribers
+# running in non-interactive environments; generate it on the host with
+# `claude setup-token`. ANTHROPIC_API_KEY is accepted as an alternative for
+# Console (pay-per-token) accounts, which bill separately from a subscription.
+if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
+  AUTH_MODE="subscription (CLAUDE_CODE_OAUTH_TOKEN)"
+elif [ -n "${ANTHROPIC_API_KEY:-}" ]; then
+  AUTH_MODE="console API key (ANTHROPIC_API_KEY)"
+else
+  die "No credentials found. Set one of:
+
+  Claude subscription (recommended):
+    claude setup-token                       # on the host, opens a browser
+    export CLAUDE_CODE_OAUTH_TOKEN=<token>
+
+  Console account (billed separately, pay-per-token):
     export ANTHROPIC_API_KEY=sk-ant-..."
+fi
 
 command -v docker >/dev/null || die "docker not found on PATH"
 docker info >/dev/null 2>&1 || die "Docker is not running. Start Docker Desktop first."
@@ -82,11 +97,20 @@ export OTEL_RESOURCE_ATTRIBUTES="experiment.arm=${ARM},apparatus.sha=${APPARATUS
 # is passed to compose explicitly rather than exported.
 COMPOSE_ENV=(env "UID=$(id -u)" "GID=$(id -g)")
 
+# Pass through only the credential that is actually set. Forwarding the other as
+# an empty string risks it shadowing the one in use inside the container.
+if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
+  COMPOSE_ENV+=("CLAUDE_CODE_OAUTH_TOKEN=${CLAUDE_CODE_OAUTH_TOKEN}")
+else
+  COMPOSE_ENV+=("ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}")
+fi
+
 cat <<INFO
 ────────────────────────────────────────────────────────
  arm            : ${ARM}
  branch         : ${BRANCH}
  apparatus.sha  : ${APPARATUS_SHA}
+ auth           : ${AUTH_MODE}
  test command   : ${TEST_COMMAND:-<unset — gate fails closed>}
  otlp endpoint  : http://otel-collector:4318
  mounted        : ${REPO_DIR} -> /work   (repo only)

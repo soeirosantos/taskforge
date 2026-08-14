@@ -29,7 +29,16 @@ services:
 
     environment:
       # Auth. Passed from your shell; never baked into the image or committed.
-      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:?set ANTHROPIC_API_KEY before running}"
+      #
+      # CLAUDE_CODE_OAUTH_TOKEN is the supported path for Claude subscribers in
+      # non-interactive environments (`claude setup-token` on the host).
+      # ANTHROPIC_API_KEY is for Console accounts, which bill separately.
+      #
+      # Both default to empty rather than being required: run-arm.sh checks that
+      # at least one is present and fails with actionable guidance. Requiring
+      # either here would break whichever path is unused.
+      CLAUDE_CODE_OAUTH_TOKEN: "${CLAUDE_CODE_OAUTH_TOKEN:-}"
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
 
       # Reach the collector by service name on the shared network. The host's
       # localhost:4318 is not reachable from inside a container.
