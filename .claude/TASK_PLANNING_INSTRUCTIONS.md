@@ -308,7 +308,9 @@ Do not substitute model judgment for a deterministic check when one is available
 
 State the task-specific evidence expected before completion.
 
-Remember that the repository-level `TaskCompleted` hook is the authoritative final completion gate and will run the configured unit-test suite.
+The repository-level `TaskCompleted` hook is the final **blocking** gate: it runs the configured unit-test suite and can refuse completion, but it never certifies it. A passing suite means nothing was detected that blocks completion.
+
+A task is complete when its acceptance criteria are demonstrably satisfied **and** the gate passes.
 
 A worker's statement that the task is complete is not sufficient.
 
@@ -335,6 +337,10 @@ STOP / human escalation
 ```
 
 Do not add retries or additional model tiers.
+
+**Escalation handoff.** Workers start with no memory of prior attempts. When delegating to `escalation-opus` after a failed attempt, the orchestrator must pass forward what the previous worker learned: the approaches already tried, why each failed, and the deterministic verification output observed. Without this, Opus's single bounded attempt begins uninformed and is likely to repeat the same approach.
+
+**Escalation record.** When a task reaches `STOP / human escalation`, the orchestrator — the only agent holding the full attempt history — writes a record to `.claude/escalations/<task-id>.md` using `.claude/escalations/TEMPLATE.md`. The record is informational and does not trigger a retry. Note in the plan which tasks are downstream of each task, so that a halt can identify the dependents that must not proceed.
 
 ---
 

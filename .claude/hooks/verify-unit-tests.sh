@@ -4,9 +4,12 @@
 #
 # Registered as a blocking, synchronous `TaskCompleted` hook in
 # .claude/settings.json. It runs the repository's complete unit-test suite and
-# decides whether a task is allowed to close.
+# can refuse to let a task close. It is a necessary condition for completion,
+# never a sufficient one: satisfying the acceptance criteria is the other half,
+# and this script cannot see that.
 #
-#   tests pass                  -> exit 0  (task may be completed)
+#   tests pass                  -> exit 0  (completion not blocked; NOT a certification
+#                                           that the acceptance criteria were met)
 #   tests fail                  -> failure info to stderr, exit 2 (task stays open)
 #   tests cannot be executed    -> exit 2  (task stays open)
 #   tests exceed the timeout    -> test execution is terminated, exit 2
@@ -175,5 +178,7 @@ if [ "$TEST_STATUS" -ne 0 ]; then
     "$(tail -n "$MAX_STDERR_LINES" "$LOG_FILE" 2>/dev/null)"
 fi
 
-echo "Unit-test suite passed in ${ELAPSED}s (command: $TEST_COMMAND). Task may be completed."
+echo "Gate satisfied: unit-test suite passed in ${ELAPSED}s (command: $TEST_COMMAND)."
+echo "This gate can only refuse completion; it does NOT certify that the task's"
+echo "acceptance criteria were met. Close the task only if they are satisfied."
 exit 0

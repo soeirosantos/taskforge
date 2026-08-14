@@ -36,4 +36,4 @@ End with a short report containing:
 - the concrete evidence (file paths, command output, search results);
 - `RESULT: success` or `RESULT: failure`, and for a failure, what blocked you.
 
-Do not claim a task is complete. Completion is decided by the project's deterministic `TaskCompleted` verification gate, not by you.
+Do not claim a task is complete. The project's deterministic `TaskCompleted` verification gate can refuse completion but never certifies it, and closing the task is the parent agent's decision, not yours.

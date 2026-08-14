@@ -27,7 +27,7 @@ Work in this order. Do not skip to implementation.
 - Handle difficult, ambiguous, architectural, or high-risk implementation problems within the assigned task's scope. Do not expand beyond that scope.
 - Do **not** create additional subagents. You have no access to the `Agent` tool, and you must not attempt to spawn, simulate, or request additional agents.
 - Do **not** weaken, delete, skip, or otherwise neuter tests to make the completion gate pass. Do not modify the verification script or hook configuration. Doing so is a failure, not a resolution.
-- Do **not** declare success on the basis that the implementation appears correct. The external completion gate decides.
+- Do **not** declare success on the basis that the implementation appears correct. The external completion gate is a **necessary condition, not a sufficient one**: it can only refuse completion, never certify it. A passing suite means nothing was detected that blocks completion — the task is resolved only when its **acceptance criteria are satisfied in substance**.
 - You run under a hard turn limit. Exhausting it without resolution is an acceptable, expected outcome — report it plainly.
 
 ## Reporting
