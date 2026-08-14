@@ -1,0 +1,5 @@
+# Claude Code local settings — machine-specific permission grants, not shared
+.claude/settings.local.json
+
+# macOS
+.DS_Store

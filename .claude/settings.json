@@ -1,0 +1,18 @@
+{
+  "env": {
+    "CLAUDE_CODE_ENABLE_TASKS": "1"
+  },
+  "hooks": {
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/verify-unit-tests.sh\"",
+            "timeout": 360
+          }
+        ]
+      }
+    ]
+  }
+}
