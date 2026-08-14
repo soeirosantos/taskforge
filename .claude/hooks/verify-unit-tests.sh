@@ -23,39 +23,32 @@
 set -uo pipefail
 
 # =============================================================================
-# CONFIGURATION  --  edit this block, not the logic below
+# CONFIGURATION
 # =============================================================================
+#
+# This script holds NO per-language configuration, so that it stays byte-for-byte
+# identical across every experiment branch. All values that vary by language live
+# in:
+#
+#     .claude/hooks/test-command.conf
+#
+# `git diff main..experiment/<lang> -- .claude/hooks/` should show that config
+# file and nothing else. If it shows changes to this script, the arms are no
+# longer running the same apparatus and their results are not comparable.
+#
+# Defaults below apply when the config file omits a value. TEST_COMMAND has no
+# default on purpose: an unconfigured gate must fail closed.
 
-# TEST_COMMAND
-#   The command that runs the COMPLETE unit-test suite for this repository.
-#   It must exit non-zero when any unit test fails.
-#
-#   This repository currently has no application code, no build system, and no
-#   test suite, so there is nothing to detect. The gate is therefore configured
-#   to FAIL CLOSED: while this value is empty, every task-completion attempt is
-#   rejected. "No test command configured" is never treated as verification
-#   success.
-#
-#   Set this as soon as a real unit-test suite exists. Examples:
-#     TEST_COMMAND="npm test"
-#     TEST_COMMAND="pytest -q"
-#     TEST_COMMAND="go test ./..."
-#     TEST_COMMAND="cargo test"
 TEST_COMMAND=""
 
-# TEST_TIMEOUT_SECONDS
-#   Maximum wall-clock time the unit-test suite may run before it is terminated
-#   and the task is refused.
-#
-#   NOTE: 300s (5 minutes) is a conservative placeholder, NOT a measured value.
-#   There is no test suite yet to time. Once a real suite exists, measure a cold
-#   run and set this to roughly 3x that duration. Keep it strictly below the
-#   `timeout` configured for this hook in .claude/settings.json, so that this
-#   script — not the Claude Code hook handler — is what enforces the limit.
+# Maximum wall-clock time the suite may run before it is terminated and the task
+# is refused. 300s is a conservative placeholder, not a measured value; override
+# it per branch once a real suite exists. Keep it strictly below the `timeout`
+# configured for this hook in .claude/settings.json, so that this script — not
+# the Claude Code hook handler — is what enforces the limit.
 TEST_TIMEOUT_SECONDS=300
 
-# MAX_STDERR_LINES
-#   How many trailing lines of test output to surface on failure.
+# How many trailing lines of test output to surface on failure.
 MAX_STDERR_LINES=200
 
 # =============================================================================
@@ -64,6 +57,7 @@ MAX_STDERR_LINES=200
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
+CONFIG_FILE="$SCRIPT_DIR/test-command.conf"
 
 # Refuse to complete the task. Everything that is not a clean, timely, passing
 # test run lands here.
@@ -83,6 +77,23 @@ cd "$PROJECT_DIR" || refuse \
   "Could not enter project directory: $PROJECT_DIR" \
   "The verification gate could not run, so the task must remain incomplete."
 
+# --- Load the per-branch configuration ---------------------------------------
+# A config file that exists but cannot be read or parsed is a verification
+# failure, not a reason to fall back to defaults.
+if [ -f "$CONFIG_FILE" ]; then
+  # shellcheck disable=SC1090
+  . "$CONFIG_FILE" || refuse \
+    "The gate configuration file could not be loaded: $CONFIG_FILE" \
+    "The verification gate could not run, so the task must remain incomplete."
+fi
+
+case "$TEST_TIMEOUT_SECONDS" in
+  ''|*[!0-9]*|0)
+    refuse \
+      "Invalid TEST_TIMEOUT_SECONDS: '${TEST_TIMEOUT_SECONDS}'" \
+      "Must be a positive integer. Fix it in $CONFIG_FILE." ;;
+esac
+
 # --- Fail closed when no test command is configured --------------------------
 TRIMMED_COMMAND="$(printf '%s' "$TEST_COMMAND" | tr -d ' \t\n')"
 if [ -z "$TRIMMED_COMMAND" ]; then
@@ -93,9 +104,12 @@ if [ -z "$TRIMMED_COMMAND" ]; then
     "verification failure, not a pass." \
     "" \
     "To fix: set TEST_COMMAND in" \
-    "  .claude/hooks/verify-unit-tests.sh" \
-    "to the command that runs this repository's complete unit-test suite," \
-    "and set TEST_TIMEOUT_SECONDS to a value measured from a real run."
+    "  $CONFIG_FILE" \
+    "to the command that runs this branch's complete unit-test suite, and set" \
+    "TEST_TIMEOUT_SECONDS to a value measured from a real run." \
+    "" \
+    "Do NOT edit verify-unit-tests.sh to configure this. That script is shared" \
+    "across all experiment branches and must stay identical in every one."
 fi
 
 # --- Run the suite under a self-enforced timeout -----------------------------

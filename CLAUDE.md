@@ -72,4 +72,10 @@ The gate fails closed: a missing, unrunnable, failing, or timed-out test suite
 all refuse task completion. Do not weaken, skip, or delete tests, and do not
 modify the verification script or hook registration, in order to close a task.
 
+The test command and timeout are **not** in the script. They live in
+`.claude/hooks/test-command.conf`, which is the only file expected to differ
+between branches. `verify-unit-tests.sh` must stay byte-for-byte identical on
+every branch so that all experiment arms run the same apparatus:
+`git diff main..<branch> -- .claude/hooks/` should show only the config file.
+
 <!-- END: AGENT EXECUTION SAFETY POLICY -->
