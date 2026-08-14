@@ -1,0 +1,55 @@
+# Sandbox service for autonomous experiment runs.
+#
+# Usage:
+#   export ANTHROPIC_API_KEY=sk-ant-...
+#   cd .claude/metrics && docker compose up -d      # start the metrics stack
+#   cd ../sandbox && docker compose run --rm sandbox
+#
+# Joins the metrics stack's network so Claude Code can push OTLP to the
+# collector by service name. Start the metrics stack first: this network is
+# declared external, so compose will not create it.
+
+services:
+  sandbox:
+    build:
+      context: .
+      args:
+        UID: "${UID:-1000}"
+        GID: "${GID:-1000}"
+    image: taskforge-sandbox:latest
+    container_name: taskforge-sandbox
+
+    # The repository, and nothing else from the host. This is what makes
+    # --dangerously-skip-permissions defensible: full authority inside a
+    # directory that is fully recoverable from git.
+    volumes:
+      - ../../:/work:rw
+
+    working_dir: /work
+
+    environment:
+      # Auth. Passed from your shell; never baked into the image or committed.
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:?set ANTHROPIC_API_KEY before running}"
+
+      # Reach the collector by service name on the shared network. The host's
+      # localhost:4318 is not reachable from inside a container.
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+
+      # Identify this arm. run-arm.sh sets these; the defaults here only apply
+      # if you start a shell manually.
+      OTEL_RESOURCE_ATTRIBUTES: "${OTEL_RESOURCE_ATTRIBUTES:-experiment.arm=unset,apparatus.sha=unset}"
+
+      # A fresh task store per container, so arms cannot mix.
+      CLAUDE_CODE_ENABLE_TASKS: "1"
+
+    networks:
+      - metrics
+
+    # Keep an interactive shell usable for `docker compose run`.
+    stdin_open: true
+    tty: true
+
+networks:
+  metrics:
+    external: true
+    name: metrics_default
