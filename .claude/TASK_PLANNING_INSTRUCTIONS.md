@@ -338,6 +338,19 @@ STOP / human escalation
 
 Do not add retries or additional model tiers.
 
+**Dispatch prompt ordering.** When the orchestrator composes the prompt it sends
+to a worker, the **deliverable must come before the verification steps**, and the
+schema below is written in that order for this reason.
+
+This is not cosmetic. On an earlier run a `worker-haiku` task exhausted all 8 of
+its turns running verification commands and returned having never created the
+file it was assigned — the prompt had listed the checks first, and a checklist
+reads as an instruction to execute it. The escalation that followed succeeded
+only because it inverted the order.
+
+For low-turn workers specifically: state the deliverable first, and give
+verification as a single batched command rather than a list of separate checks.
+
 **Task lifecycle ownership.** The orchestrator owns every `TaskCreate` and
 `TaskUpdate`. For each task it creates the task, sets it `in_progress`,
 dispatches exactly one worker, receives that worker's report, runs the
@@ -517,6 +530,32 @@ During this phase:
 Produce the complete plan and stop.
 
 The plan will be reviewed before implementation begins.
+
+---
+
+# 13. Execution notes (implementation phase)
+
+When implementation later runs against this plan, the orchestrator must keep a
+record at `EXECUTION_NOTES.md` and write it before reporting the run complete.
+
+This is required because it has repeatedly caught things no gate did: vacuous
+gate passes, the root cause of a worker's turn exhaustion, and toolchain
+mutations made inside the container that do not survive it. The automated
+records capture outcomes; only this captures *why*.
+
+Include:
+
+* every task, its initial profile, and its outcome — success, escalation, or
+  stop;
+* for any escalation: what failed, the diagnosis, and what resolved it;
+* deterministic evidence for each definition-of-done item, from commands the
+  orchestrator ran itself rather than from a worker's report;
+* any gate pass that was **vacuous** — the suite ran but proved nothing;
+* any change made to the container or toolchain during the run, since those do
+  not persist and make the arm non-reproducible;
+* apparatus integrity: confirmation that no task modified anything under
+  `.claude/`;
+* any specification deviation, with its justification.
 
 ---
 
