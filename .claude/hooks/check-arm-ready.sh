@@ -42,14 +42,16 @@ if [ -f "$CONF" ]; then
   . "$CONF" 2>/dev/null || true
   if [ -z "$(printf '%s' "$TEST_COMMAND" | tr -d ' \t\n')" ]; then
     WARNINGS+=("TEST_COMMAND is empty in .claude/hooks/test-command.conf — the gate will refuse every task completion on this branch.")
-  elif ! git diff --quiet HEAD -- .claude/hooks/test-command.conf 2>/dev/null; then
-    WARNINGS+=("test-command.conf is modified but uncommitted. A clean checkout of this branch would fail closed, so the arm is not reproducible.")
   fi
 fi
 
-# The gate script itself must match main, or arms are not comparable.
-if ! git diff --quiet main..HEAD -- .claude/hooks/verify-unit-tests.sh 2>/dev/null; then
-  WARNINGS+=("verify-unit-tests.sh differs from main. The experiment arms are running different apparatus.")
+# The gate script itself must match main, or arms are not comparable. Compared
+# by content, not by `git diff`: an arm's tree is legitimately dirty while it
+# works, and a commit-state comparison would fire on every ordinary session.
+MAIN_GATE="$(git show main:.claude/hooks/verify-unit-tests.sh 2>/dev/null || true)"
+THIS_GATE="$(cat "$SCRIPT_DIR/verify-unit-tests.sh" 2>/dev/null || true)"
+if [ -n "$MAIN_GATE" ] && [ "$MAIN_GATE" != "$THIS_GATE" ]; then
+  WARNINGS+=("verify-unit-tests.sh differs from main's version. The experiment arms are running different apparatus.")
 fi
 
 [ ${#WARNINGS[@]} -eq 0 ] && exit 0

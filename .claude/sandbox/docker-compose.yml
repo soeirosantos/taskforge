@@ -44,6 +44,18 @@ services:
       # if you start a shell manually.
       OTEL_RESOURCE_ATTRIBUTES: "${OTEL_RESOURCE_ATTRIBUTES:-experiment.arm=unset,apparatus.sha=unset}"
 
+      # Required for INTERACTIVE sessions to have TaskCreate/TaskUpdate.
+      #
+      # The tool gate has several escape hatches; headless `claude -p` takes an
+      # unconditional one, so `-p` probes always show the tools present while an
+      # interactive session on the same build does not. Interactive sessions
+      # fall through to a server-side A/B flag that is off by default, and this
+      # variable is the supported override. Note CLAUDE_CODE_ENABLE_TASKS is a
+      # different, unrelated switch and does not control this.
+      #
+      # Must be the string "true" — the check is a strict boolean comparison.
+      CLAUDE_CODE_ENABLE_TODO_TOOLS: "true"
+
     networks:
       - metrics
 

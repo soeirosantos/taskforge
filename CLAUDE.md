@@ -12,8 +12,13 @@ add unrelated development instructions inside these delimiters.
 
 - Planned implementation units must be represented as Claude Code tasks
   (`TaskCreate` / `TaskUpdate`), **not** `TodoWrite` todos. Only real tasks run
-  the `TaskCompleted` gate. `.claude/settings.json` sets
-  `CLAUDE_CODE_ENABLE_TASKS=1` so these tools are available in this repository.
+  the `TaskCompleted` gate.
+- The sandbox sets `CLAUDE_CODE_ENABLE_TODO_TOOLS=true`, which is what makes
+  those tools available in an **interactive** session. (`CLAUDE_CODE_ENABLE_TASKS`
+  is a different switch and does not control this.) If a session lacks
+  `TaskCreate`, that variable is missing — do not fall back to `TodoWrite`, and
+  do not run workers untracked: both silently remove what this repository
+  measures. Start a session that has the tools instead.
 - Tasks must remain `in_progress` while implementation is incomplete.
 - A task may be marked complete only through the normal task-completion
   mechanism, so that the `TaskCompleted` hook executes.

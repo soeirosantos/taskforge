@@ -63,17 +63,17 @@ if [ "$BRANCH" != "main" ] && [ -z "$(printf '%s' "$TEST_COMMAND" | tr -d ' \t\n
 fi
 
 # The gate script must be identical to main's, or the arms are not comparable.
-if [ "$BRANCH" != "main" ] && ! git diff --quiet main..HEAD -- .claude/hooks/verify-unit-tests.sh 2>/dev/null; then
-  die "verify-unit-tests.sh differs from main on this branch.
+# Compared by content rather than by `git diff`: an arm's working tree is
+# legitimately dirty for most of a run, and comparing committed state would
+# either block real work or report drift that does not exist.
+if [ "$BRANCH" != "main" ]; then
+  MAIN_GATE="$(git show main:.claude/hooks/verify-unit-tests.sh 2>/dev/null || true)"
+  THIS_GATE="$(cat .claude/hooks/verify-unit-tests.sh 2>/dev/null || true)"
+  if [ -n "$MAIN_GATE" ] && [ "$MAIN_GATE" != "$THIS_GATE" ]; then
+    die "verify-unit-tests.sh differs from main's version.
    The arms are running different apparatus and results are not comparable.
    Per-branch config belongs in $CONF, not in the gate script."
-fi
-
-# --- Warn (do not block) on a dirty tree -------------------------------------
-if [ -n "$(git status --porcelain)" ]; then
-  echo "WARNING: working tree is dirty. The run will include uncommitted changes." >&2
-  echo "         Commit first if you want the arm to be reproducible." >&2
-  echo >&2
+  fi
 fi
 
 # --- Metrics stack -----------------------------------------------------------
@@ -98,6 +98,12 @@ COMPOSE_ENV=(env "UID=$(id -u)" "GID=$(id -g)")
 
 COMPOSE_ENV+=("CLAUDE_CODE_OAUTH_TOKEN=${CLAUDE_CODE_OAUTH_TOKEN}")
 
+# Compose substitutes ${OTEL_RESOURCE_ATTRIBUTES} from the environment of the
+# `docker compose` process — which is this `env` prefix, not the parent shell.
+# Exporting alone is not enough; the first run lost its arm label this way and
+# produced telemetry that could not be attributed to an arm.
+COMPOSE_ENV+=("OTEL_RESOURCE_ATTRIBUTES=${OTEL_RESOURCE_ATTRIBUTES}")
+
 cat <<INFO
 ────────────────────────────────────────────────────────
  arm            : ${ARM}
@@ -111,13 +117,30 @@ cat <<INFO
 INFO
 
 if [ $# -eq 0 ]; then
-  echo "Starting interactive shell. Inside, run claude with:"
+  # Named and NOT --rm, so the container survives a closed terminal. The first
+  # run used `run --rm`: when the terminal died, Docker deleted the container
+  # and its HOME, taking the task store with it and leaving nothing to
+  # reconcile. Reattach after a disconnect with:
+  #
+  #     docker start -ai taskforge-arm-<arm>
+  #
+  CONTAINER="taskforge-arm-${ARM}"
+  if docker ps -a --format '{{.Names}}' | grep -qx "$CONTAINER"; then
+    echo "Reattaching to existing container '${CONTAINER}'."
+    echo "To start fresh instead: docker rm -f ${CONTAINER}"
+    echo
+    exec docker start -ai "$CONTAINER"
+  fi
+  echo "Starting interactive shell in '${CONTAINER}'. Inside, run claude with:"
   echo "  claude --dangerously-skip-permissions"
   echo
+  echo "If the terminal closes, the container keeps running. Reattach with:"
+  echo "  docker start -ai ${CONTAINER}"
+  echo
   exec "${COMPOSE_ENV[@]}" docker compose -f "$SCRIPT_DIR/docker-compose.yml" \
-    run --rm sandbox bash
+    run --name "$CONTAINER" sandbox bash
 fi
 
-# Headless: pass everything through to claude inside the container.
+# Headless: --rm is correct here, since the process owns the container's life.
 exec "${COMPOSE_ENV[@]}" docker compose -f "$SCRIPT_DIR/docker-compose.yml" \
   run --rm sandbox claude --dangerously-skip-permissions "$@"
