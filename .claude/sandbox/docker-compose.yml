@@ -40,12 +40,9 @@ services:
       # localhost:4318 is not reachable from inside a container.
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
 
-      # Identify this arm. run-arm.sh sets these; the defaults here only apply
+      # Identify this arm. run-arm.sh sets this; the default here only applies
       # if you start a shell manually.
       OTEL_RESOURCE_ATTRIBUTES: "${OTEL_RESOURCE_ATTRIBUTES:-experiment.arm=unset,apparatus.sha=unset}"
-
-      # A fresh task store per container, so arms cannot mix.
-      CLAUDE_CODE_ENABLE_TASKS: "1"
 
     networks:
       - metrics

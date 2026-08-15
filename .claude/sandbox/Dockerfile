@@ -15,6 +15,12 @@ ARG GO_VERSION=1.23.5
 ARG RUST_VERSION=1.83.0
 ARG NODE_MAJOR=22
 
+# The agent's own version is apparatus: a different CLI build is a different
+# experiment. Left unpinned, `npm install -g` silently changes agent behavior on
+# every rebuild — which already cost one run, when an unpinned upgrade changed
+# how the task tools are gated.
+ARG CLAUDE_CODE_VERSION=2.1.233
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -43,7 +49,7 @@ RUN curl -fsSL https://sh.rustup.rs \
       | sh -s -- -y --no-modify-path --default-toolchain "${RUST_VERSION}" --profile minimal \
     && chmod -R a+w "$CARGO_HOME" "$RUSTUP_HOME"
 
-RUN npm install -g @anthropic-ai/claude-code
+RUN npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
 
 # Run as a non-root user whose uid matches the host user, so files the agent
 # creates in the mounted repo are owned by you, not root.

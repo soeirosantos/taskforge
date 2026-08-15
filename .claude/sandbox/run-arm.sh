@@ -86,7 +86,10 @@ if ! curl -s --max-time 2 http://localhost:9090/-/healthy >/dev/null 2>&1; then
   echo >&2
 fi
 
-export OTEL_RESOURCE_ATTRIBUTES="experiment.arm=${ARM},apparatus.sha=${APPARATUS_SHA}"
+# The CLI version is apparatus too — a different agent build is a different
+# experiment — so record it alongside the arm and the controls commit.
+CLI_VERSION="$(grep -oE '^ARG CLAUDE_CODE_VERSION=.*' "$SCRIPT_DIR/Dockerfile" | cut -d= -f2)"
+export OTEL_RESOURCE_ATTRIBUTES="experiment.arm=${ARM},apparatus.sha=${APPARATUS_SHA},cli.version=${CLI_VERSION:-unknown}"
 
 # Build the image as a user matching yours, so files the agent creates in the
 # mounted repo are owned by you and not by root. UID is readonly in bash, so it
@@ -100,6 +103,7 @@ cat <<INFO
  arm            : ${ARM}
  branch         : ${BRANCH}
  apparatus.sha  : ${APPARATUS_SHA}
+ cli version    : ${CLI_VERSION:-unknown}
  test command   : ${TEST_COMMAND:-<unset — gate fails closed>}
  otlp endpoint  : http://otel-collector:4318
  mounted        : ${REPO_DIR} -> /work   (repo only)
