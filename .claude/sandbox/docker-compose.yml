@@ -1,7 +1,7 @@
 # Sandbox service for autonomous experiment runs.
 #
 # Usage:
-#   export ANTHROPIC_API_KEY=sk-ant-...
+#   export CLAUDE_CODE_OAUTH_TOKEN=<token>          # from `claude setup-token`
 #   cd .claude/metrics && docker compose up -d      # start the metrics stack
 #   cd ../sandbox && docker compose run --rm sandbox
 #
@@ -29,16 +29,12 @@ services:
 
     environment:
       # Auth. Passed from your shell; never baked into the image or committed.
+      # Generate the token on the host with `claude setup-token`.
       #
-      # CLAUDE_CODE_OAUTH_TOKEN is the supported path for Claude subscribers in
-      # non-interactive environments (`claude setup-token` on the host).
-      # ANTHROPIC_API_KEY is for Console accounts, which bill separately.
-      #
-      # Both default to empty rather than being required: run-arm.sh checks that
-      # at least one is present and fails with actionable guidance. Requiring
-      # either here would break whichever path is unused.
+      # Defaults to empty rather than being required, because run-arm.sh already
+      # checks for it and fails with actionable guidance. Requiring it here would
+      # produce a less useful compose error instead.
       CLAUDE_CODE_OAUTH_TOKEN: "${CLAUDE_CODE_OAUTH_TOKEN:-}"
-      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
 
       # Reach the collector by service name on the shared network. The host's
       # localhost:4318 is not reachable from inside a container.

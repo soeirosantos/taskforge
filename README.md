@@ -48,27 +48,21 @@ to launch if it does not.
 
 ### 4. Authenticate
 
-If you have a Claude subscription (Pro/Max), generate a long-lived token on the
-host. This is the supported path for non-interactive environments and bills
-against your existing subscription:
+Generate a long-lived token on the host. This is the supported path for running
+Claude Code in non-interactive environments as a Claude subscriber, and it bills
+against your existing Pro/Max subscription — no separate account required.
 
 ```bash
 claude setup-token                    # opens a browser
 export CLAUDE_CODE_OAUTH_TOKEN=<token>
 ```
 
-Treat the token like a password: it grants access to your Claude account. Never
-commit it. It is inference-only, so it cannot be used to manage your account.
+The token persists across runs, so this is a one-time step until it expires.
+Export it in whichever shell runs `run-arm.sh`; it is passed into the container
+from there.
 
-Alternatively, for a Console account — a **separate** account from your Claude
-subscription, billed per token:
-
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-```
-
-`run-arm.sh` prefers the OAuth token when both are set, and passes only the one
-in use into the container.
+Treat it like a password: it grants inference access to your Claude account.
+Never commit it. If it leaks, revoke it with `claude auth`.
 
 ### 5. Launch the sandbox
 
@@ -141,7 +135,7 @@ needs interaction, so this is mainly useful for smoke tests.
 
 | Symptom | Cause |
 | --- | --- |
-| `No credentials found` | Run `claude setup-token` and export `CLAUDE_CODE_OAUTH_TOKEN` (step 4). |
+| `CLAUDE_CODE_OAUTH_TOKEN is not set` | Run `claude setup-token` and export it (step 4). |
 | `Network 'metrics_default' not found` | Start the metrics stack first (step 2). |
 | `TEST_COMMAND is empty` | Set it in `.claude/hooks/test-command.conf` (step 3). |
 | `verify-unit-tests.sh differs from main` | Per-branch config belongs in `test-command.conf`, not the gate script. |
