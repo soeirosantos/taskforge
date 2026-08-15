@@ -1,6 +1,5 @@
 {
   "env": {
-    "CLAUDE_CODE_ENABLE_TASKS": "1",
     "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
     "OTEL_METRICS_EXPORTER": "otlp",
     "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",

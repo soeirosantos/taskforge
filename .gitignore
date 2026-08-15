@@ -1,5 +1,8 @@
 # Claude Code local settings — machine-specific permission grants, not shared
 .claude/settings.local.json
 
+# Compiled binary — `go build ./...` writes it to the module root
+/healthcheck
+
 # macOS
 .DS_Store
