@@ -338,6 +338,13 @@ STOP / human escalation
 
 Do not add retries or additional model tiers.
 
+**Task lifecycle ownership.** The orchestrator owns every `TaskCreate` and
+`TaskUpdate`. For each task it creates the task, sets it `in_progress`,
+dispatches exactly one worker, receives that worker's report, runs the
+verification itself rather than trusting the report, and then closes the task or
+escalates it. Worker subagents do not have the task tools and must not be
+expected to use them — a plan must never assign task bookkeeping to a worker.
+
 **Escalation handoff.** Workers start with no memory of prior attempts. When delegating to `escalation-opus` after a failed attempt, the orchestrator must pass forward what the previous worker learned: the approaches already tried, why each failed, and the deterministic verification output observed. Without this, Opus's single bounded attempt begins uninformed and is likely to repeat the same approach.
 
 **Escalation record.** When a task reaches `STOP / human escalation`, the orchestrator — the only agent holding the full attempt history — writes a record to `.claude/escalations/<task-id>.md` using `.claude/escalations/TEMPLATE.md`. The record is informational and does not trigger a retry. Note in the plan which tasks are downstream of each task, so that a halt can identify the dependents that must not proceed.

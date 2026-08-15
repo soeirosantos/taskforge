@@ -13,21 +13,38 @@ add unrelated development instructions inside these delimiters.
 - Planned implementation units must be represented as Claude Code tasks
   (`TaskCreate` / `TaskUpdate`), **not** `TodoWrite` todos. Only real tasks run
   the `TaskCompleted` gate.
-- The sandbox sets `CLAUDE_CODE_ENABLE_TODO_TOOLS=true`, which is what makes
-  those tools available in an **interactive** session. (`CLAUDE_CODE_ENABLE_TASKS`
-  is a different switch and does not control this.) If a session lacks
-  `TaskCreate`, that variable is missing — do not fall back to `TodoWrite`, and
-  do not run workers untracked: both silently remove what this repository
-  measures. Start a session that has the tools instead.
+- **The task lifecycle belongs to the orchestrator alone.** The orchestrating
+  agent creates each task, sets it `in_progress`, dispatches a worker, and —
+  after the worker returns — closes it. Worker subagents never call `TaskCreate`
+  or `TaskUpdate` and do not need the task tools. A worker reporting that it
+  lacks them is describing the expected state, not a blocker.
+- This is deliberate. Closing a task runs the `TaskCompleted` gate, and the gate
+  must fire where the evidence is: the orchestrator holds the worker's report
+  *and* runs the verification. A worker closing its own task would be
+  self-certifying, which is the failure this whole policy exists to prevent.
+  Only the orchestrator can also tell that a worker exhausted its bounded
+  attempt and decide whether to escalate.
+- Because the orchestrator closes tasks, it must **run the verification itself**
+  after a worker returns, rather than trusting the worker's claim that tests
+  pass.
 - Tasks must remain `in_progress` while implementation is incomplete.
 - A task may be marked complete only through the normal task-completion
   mechanism, so that the `TaskCompleted` hook executes.
 - An agent's textual claim that work is finished is **not** sufficient to
   consider a task complete.
+- The orchestrator's session needs the task tools. The sandbox sets
+  `CLAUDE_CODE_ENABLE_TODO_TOOLS=true`, which is what makes them available in an
+  **interactive** session. (`CLAUDE_CODE_ENABLE_TASKS` is a different switch and
+  does not control this.) If the *orchestrator* lacks `TaskCreate`, that variable
+  is missing — do not fall back to `TodoWrite` and do not run workers untracked;
+  both silently remove what this repository measures. Start a session that has
+  the tools instead.
 
 ### Delegation
 
-- The main/orchestrating agent owns delegation.
+- The main/orchestrating agent owns delegation **and the task lifecycle**. It
+  dispatches one worker per task, receives that worker's report, runs the
+  verification, and closes or escalates the task itself.
 - Worker subagents must never delegate further. The three worker profiles in
   `.claude/agents/` are denied the `Agent` tool for this reason.
 - Normal implementation should use `worker-sonnet` unless the planning phase
