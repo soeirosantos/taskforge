@@ -78,4 +78,14 @@ between branches. `verify-unit-tests.sh` must stay byte-for-byte identical on
 every branch so that all experiment arms run the same apparatus:
 `git diff main..<branch> -- .claude/hooks/` should show only the config file.
 
+### Harness files vs application files
+
+Everything under `.claude/` is harness. No implementation task may modify it —
+in particular `.claude/hooks/` and `.claude/settings.json`. Harness
+documentation lives in `.claude/AGENT_CONTROL_README.md`.
+
+The repository root belongs to the application. If a specification calls for a
+`README.md`, create it at the root; there is no name collision with the harness
+and no reason to rename it.
+
 <!-- END: AGENT EXECUTION SAFETY POLICY -->

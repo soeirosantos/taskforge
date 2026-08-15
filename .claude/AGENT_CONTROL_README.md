@@ -1,4 +1,13 @@
-# taskforge
+# Agent control harness
+
+How to run the bounded-execution experiment: sandbox, metrics, arm branches.
+
+This documents the **harness**, not any application built by an arm. It lives
+under `.claude/` so that the repository root stays free for application code and
+its own `README.md` — an arm implementing a specification that asks for a
+`README.md` should create one at the root and leave this file alone.
+
+All commands below are run from the **repository root**, not from `.claude/`.
 
 ## How to run an experiment arm
 
