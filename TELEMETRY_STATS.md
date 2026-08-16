@@ -26,10 +26,42 @@ disagreements are informative — see §5.
 | Lines added / removed | 1,640 / 33 | partial (see §6.3) |
 | Edit-tool decisions | 12 accepted, 0 rejected | partial |
 | Claude Code sessions | 1 | correct but easily misread (§6.2) |
+| **Subscription consumption** | **~1.5 of the 5 h session windows** | operator-reported (§1.1) |
 
 This is the only place a **dollar figure for the whole run** exists. Neither the
 orchestrator nor `STATS.md` could produce one, because the session authenticates
 by subscription and no per-token invoice is visible to it.
+
+### 1.1 Subscription consumption — the binding constraint
+
+*Operator-reported, not measured by any instrument in this repository.*
+
+The run consumed roughly **one and a half Claude Pro 5-hour session windows**.
+The operator used the subscription for essentially nothing else during this work,
+so the figure is close to attributable in full.
+
+**This, not the $4.21, is what actually limited the run.** The evidence is in the
+timeline: wall clock was 11 h 36 m against ~2 h 35 m of active time, and the two
+gaps — 4 h 38 m and 4 h 23 m — were spent waiting for the subscription budget to
+refresh, not working. Capability did not set the calendar; the rate limit did.
+
+Two things follow that the dollar figure alone would hide:
+
+- **$4.21 of API-equivalent spend is not the price of this run to a Pro
+  subscriber.** It is 1.5 five-hour windows, which for a solo user is most of a
+  working day's allowance regardless of how few dollars the tokens represent.
+- **The orchestrator's 70 % cost share (§2) is also a 70 % share of that
+  allowance.** Anything that shortens orchestrator context — fewer verification
+  re-runs, more aggressive summarization, splitting a long arm across sessions —
+  buys back rate-limit headroom, which is the scarcer resource here.
+
+For a run of this size the practical planning number is therefore **~1.5 session
+windows per 7,300-line specified service**, with the caveat that this was a
+single observation on an unusually complete specification.
+
+*Not instrumented.* Claude Code does not export subscription-window consumption
+as a metric, and it is not in `task-events.jsonl`. If it matters to future arms,
+it has to be recorded by hand at the end of a run.
 
 ---
 
@@ -265,3 +297,8 @@ sum by (<dim>) (max_over_time(claude_code_<metric>{experiment_arm="<arm>"}[24h])
    across three escalations including one direct-Opus task assignment. The policy's
    caution about Opus overuse is not borne out by the numbers — the expensive
    Opus is the orchestrator, which is unavoidable by design.
+4. **The real budget is the subscription window, not the dollar.** ~1.5 of the
+   5 h Pro windows went into this run, and the two multi-hour gaps in the timeline
+   were rate-limit waits rather than work. $4.21 makes the run look nearly free;
+   1.5 windows makes it look like most of a day's allowance. The second framing
+   is the one that predicts whether the next arm can be finished in a sitting.
