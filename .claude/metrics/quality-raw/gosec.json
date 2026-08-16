@@ -1,0 +1,140 @@
+{
+	"Golang errors": {},
+	"Issues": [
+		{
+			"severity": "MEDIUM",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "89",
+				"url": "https://cwe.mitre.org/data/definitions/89.html"
+			},
+			"rule_id": "G202",
+			"details": "SQL string concatenation",
+			"file": "/work/internal/store/list.go",
+			"code": "44: \tif len(conditions) \u003e 0 {\n45: \t\tquery += \" WHERE \" + strings.Join(conditions, \" AND \")\n46: \t}\n",
+			"line": "45",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "MEDIUM",
+			"confidence": "LOW",
+			"cwe": {
+				"id": "400",
+				"url": "https://cwe.mitre.org/data/definitions/400.html"
+			},
+			"rule_id": "G112",
+			"details": "Potential Slowloris Attack because ReadHeaderTimeout is not configured in the http.Server",
+			"file": "/work/app.go",
+			"code": "104: \thandler := api.New(st, registry)\n105: \tserver := \u0026http.Server{Handler: handler.Routes()}\n106: \n",
+			"line": "105",
+			"column": "13",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/work/internal/store/store.go",
+			"code": "75: \tif _, err := db.ExecContext(ctx, schema); err != nil {\n76: \t\tdb.Close()\n77: \t\treturn nil, fmt.Errorf(\"store: create schema: %w\", err)\n",
+			"line": "76",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/work/internal/store/store.go",
+			"code": "70: \tif err := db.PingContext(ctx); err != nil {\n71: \t\tdb.Close()\n72: \t\treturn nil, fmt.Errorf(\"store: ping database: %w\", err)\n",
+			"line": "71",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/work/internal/api/errors.go",
+			"code": "61: \tw.WriteHeader(status)\n62: \tw.Write(body)\n63: }\n",
+			"line": "62",
+			"column": "2",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/work/internal/api/errors.go",
+			"code": "56: \t\tw.WriteHeader(http.StatusInternalServerError)\n57: \t\tw.Write([]byte(`{\"error\":{\"code\":\"INTERNAL_ERROR\",\"message\":\"failed to encode response\"}}`))\n58: \t\treturn\n",
+			"line": "57",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/work/app.go",
+			"code": "87: \t\tif err != nil {\n88: \t\t\tlistener.Close()\n89: \t\t}\n",
+			"line": "88",
+			"column": "4",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/work/app.go",
+			"code": "64: \t\tif err != nil {\n65: \t\t\tst.Close()\n66: \t\t}\n",
+			"line": "65",
+			"column": "4",
+			"nosec": false,
+			"suppressions": null
+		}
+	],
+	"Stats": {
+		"files": 23,
+		"lines": 2473,
+		"nosec": 0,
+		"found": 8
+	},
+	"GosecVersion": "dev"
+}

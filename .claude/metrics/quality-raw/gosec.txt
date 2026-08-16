@@ -1,0 +1,103 @@
+[gosec] 2026/08/16 12:10:45 Including rules: default
+[gosec] 2026/08/16 12:10:45 Excluding rules: default
+[gosec] 2026/08/16 12:10:45 Including analyzers: default
+[gosec] 2026/08/16 12:10:45 Excluding analyzers: default
+[gosec] 2026/08/16 12:10:45 Import directory: /work
+[gosec] 2026/08/16 12:10:45 Import directory: /work/internal/api
+[gosec] 2026/08/16 12:10:45 Import directory: /work/internal/jobs
+[gosec] 2026/08/16 12:10:45 Import directory: /work/internal/store
+[gosec] 2026/08/16 12:10:45 Import directory: /work/internal/worker
+[gosec] 2026/08/16 12:10:45 Checking package: jobs
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/jobs/errors.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/jobs/execute.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/jobs/job.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/jobs/payload.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/jobs/state.go
+[gosec] 2026/08/16 12:10:45 Checking package: worker
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/worker/pool.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/worker/registry.go
+[gosec] 2026/08/16 12:10:45 Checking package: store
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/store/errors.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/store/job.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/store/list.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/store/store.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/store/transition.go
+[gosec] 2026/08/16 12:10:45 Checking package: main
+[gosec] 2026/08/16 12:10:45 Checking file: /work/app.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/config.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/main.go
+[gosec] 2026/08/16 12:10:45 Checking package: api
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/api/cancel.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/api/create.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/api/errors.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/api/get.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/api/health.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/api/list.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/api/retry.go
+[gosec] 2026/08/16 12:10:45 Checking file: /work/internal/api/router.go
+Results:
+
+
+[/work/internal/store/list.go:45] - G202 (CWE-89): SQL string concatenation (Confidence: HIGH, Severity: MEDIUM)
+    44: 	if len(conditions) > 0 {
+  > 45: 		query += " WHERE " + strings.Join(conditions, " AND ")
+    46: 	}
+
+Autofix: 
+
+[/work/app.go:105] - G112 (CWE-400): Potential Slowloris Attack because ReadHeaderTimeout is not configured in the http.Server (Confidence: LOW, Severity: MEDIUM)
+    104: 	handler := api.New(st, registry)
+  > 105: 	server := &http.Server{Handler: handler.Routes()}
+    106: 
+
+Autofix: 
+
+[/work/internal/store/store.go:76] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    75: 	if _, err := db.ExecContext(ctx, schema); err != nil {
+  > 76: 		db.Close()
+    77: 		return nil, fmt.Errorf("store: create schema: %w", err)
+
+Autofix: 
+
+[/work/internal/store/store.go:71] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    70: 	if err := db.PingContext(ctx); err != nil {
+  > 71: 		db.Close()
+    72: 		return nil, fmt.Errorf("store: ping database: %w", err)
+
+Autofix: 
+
+[/work/internal/api/errors.go:62] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    61: 	w.WriteHeader(status)
+  > 62: 	w.Write(body)
+    63: }
+
+Autofix: 
+
+[/work/internal/api/errors.go:57] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    56: 		w.WriteHeader(http.StatusInternalServerError)
+  > 57: 		w.Write([]byte(`{"error":{"code":"INTERNAL_ERROR","message":"failed to encode response"}}`))
+    58: 		return
+
+Autofix: 
+
+[/work/app.go:88] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    87: 		if err != nil {
+  > 88: 			listener.Close()
+    89: 		}
+
+Autofix: 
+
+[/work/app.go:65] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    64: 		if err != nil {
+  > 65: 			st.Close()
+    66: 		}
+
+Autofix: 
+
+Summary:
+  Gosec  : dev
+  Files  : 23
+  Lines  : 2473
+  Nosec  : 0
+  Issues : 8
+
