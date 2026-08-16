@@ -3,7 +3,7 @@ name: worker-haiku
 description: Bounded low-complexity worker for repository discovery, searches, simple mechanical edits, running commands, and gathering or summarizing deterministic evidence. Use for work that needs little reasoning. Cannot delegate.
 model: haiku
 effort: low
-maxTurns: 8
+maxTurns: 15
 disallowedTools: ["Agent", "Task"]
 ---
 

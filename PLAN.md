@@ -87,6 +87,41 @@ all 8 of its turns running verification commands and returned having never
 created the file it was assigned — the prompt had listed the checks first, and a
 checklist reads as an instruction to execute it.
 
+### Lead with a concrete first action — learned from T1
+
+T1 took four dispatches. The decisive variable was **prompt scope, not model
+tier**: Opus at the same budget did no better than Sonnet.
+
+| Attempt | Worker | Instruction shape | Outcome |
+|---|---|---|---|
+| 1 | sonnet | understand, then build | cut off; nothing delivered |
+| 2 | opus | understand, then build | cut off; 1208 lines, did not compile |
+| 3 | sonnet | read and verify, then fix | cut off; identified the fix, could not apply it |
+| 4 | sonnet | **apply this edit first, then iterate** | success in 5 tool uses, 14s |
+
+Every failed attempt was told to comprehend before acting, and spent its budget
+comprehending. The successful one named a specific first edit and let test output
+drive everything after it.
+
+So, when composing a dispatch:
+
+- **Name the first concrete action** and put it first. "Create
+  `internal/store/schema.go` with …" or "In `job_test.go:192`, replace X with Y".
+  Never open with "read the package and understand it".
+- **Let verification drive discovery.** "Run the command, then fix what it
+  reports, and repeat" costs one turn per real defect. "Review the code for
+  correctness" costs the whole budget and finds less.
+- **Supply resolved design decisions rather than questions.** If a task hinges on
+  a detail a worker would have to investigate, investigate it yourself first and
+  hand over the verified answer. Attempt 1 died investigating whether
+  `json.Number` was needed; a two-minute orchestrator probe settled it, and every
+  later attempt used the result for free.
+- **Scope reading explicitly.** "Read only the file a failure points at" is worth
+  saying out loud. Existing code a worker must not re-derive should be described
+  in the prompt (paths, line counts, what each file holds) rather than discovered.
+
+This matters most for T3, T5 and T7, which are the largest remaining tasks.
+
 ```
 <Objective — one sentence, from the task below>
 

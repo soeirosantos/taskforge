@@ -3,7 +3,7 @@ name: worker-sonnet
 description: Bounded implementation worker for normal software engineering — feature implementation, writing tests, localized refactoring, debugging, and moderately complex engineering tasks. The default worker for implementation. Cannot delegate.
 model: sonnet
 effort: high
-maxTurns: 15
+maxTurns: 40
 disallowedTools: ["Agent", "Task"]
 ---
 

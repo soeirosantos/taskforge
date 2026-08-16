@@ -3,3 +3,9 @@
 
 # macOS
 .DS_Store
+
+# Database and build artifacts
+/taskforge.db
+*.db-wal
+*.db-shm
+/taskforge

@@ -3,7 +3,7 @@ name: escalation-opus
 description: Single bounded escalation attempt after a normal implementation worker failed to satisfy the completion gate. Diagnoses why the previous attempt failed, then makes one attempt at difficult, ambiguous, architectural, or high-risk problems. There is no autonomous tier after this one. Cannot delegate.
 model: opus
 effort: high
-maxTurns: 15
+maxTurns: 50
 disallowedTools: ["Agent", "Task"]
 ---
 
