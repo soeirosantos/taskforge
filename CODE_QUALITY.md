@@ -4,7 +4,7 @@ Static analysis of the `experiment/go-job-processing-service` arm, run **after**
 the arm completed, by tools that had no part in producing the code.
 
 **Why this file exists.** The experiment's premise is that a passing test suite
-is necessary but not sufficient evidence of quality. A skeptical reader's next
+is necessary but not sufficient evidence of quality. The obvious follow-up
 question is whether the tests pass because the code is good, or because the same
 process wrote both. Independent static analysis is a checkable answer to that,
 where "an experienced Go developer skimmed it and it looked fine" is not.
@@ -73,13 +73,38 @@ if len(conditions) > 0 {
 }
 ```
 
-Reads as SQL injection, and is not. The strings joined are **static literals**
-(`"status = ?"`, `"type = ?"`) appended only after the corresponding filter value
-passes a `Valid()` check; every user-supplied value goes into `args` and is bound
-as a `?` parameter via `QueryContext(ctx, query, args...)`.
+Reads as SQL injection, and is not. **No user-controlled input is concatenated
+at all** — the concatenation assembles the query *template*, and the values
+travel separately:
 
-There is no path by which request data reaches the query string. This is the
-standard dynamic-`WHERE`-clause idiom and it is implemented correctly.
+```go
+conditions = append(conditions, "status = ?")   // template fragment: a string literal
+args       = append(args, string(*filter.Status)) // the value: never touches the SQL text
+...
+rows, err := s.db.QueryContext(ctx, query, args...)
+```
+
+Every fragment joined is a compile-time literal, so the finished statement is
+always one of exactly four strings — the base query, plus optionally
+`WHERE status = ?`, `WHERE type = ?`, or both. User values reach the database
+only as bound parameters.
+
+The safety here comes from **parameterization**, not from sanitization. Worth
+being precise about, because the two are often conflated: `Valid()` is called on
+the filter before its fragment is appended, but that check is about rejecting a
+nonsense filter with `ErrInvalidFilter` rather than silently matching nothing —
+it is not what prevents injection, and removing it would not create an injection
+vector. Conversely, no amount of validation would make string-interpolated values
+safe.
+
+(Strictly, `QueryContext` with arguments performs *parameter binding*; whether
+the driver also prepares and caches the statement is an implementation detail.
+The security property depends on the values being transmitted separately from
+the SQL text, not on statement preparation.)
+
+The true-positive shape of this rule would be a value interpolated into a
+fragment — `"status = '" + string(*filter.Status) + "'"`. The code does not do
+that anywhere.
 
 Worth stating explicitly because the store layer is hand-written SQL throughout,
 and this was the single highest-value thing for an independent tool to check.
