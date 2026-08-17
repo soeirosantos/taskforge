@@ -181,7 +181,7 @@ gate-passage timeline (9 events), the discrepancy is in the collector, not here.
 | Tasks abandoned | 0 |
 | Total dispatches | 14 (excluding the calibration probe) |
 | **Dispatches per task (mean)** | **1.56** |
-| Tasks completed in one dispatch | 5 of 9 (T3, T4, T5, T7, T9) |
+| Tasks completed in one dispatch | 6 of 9 (T3, T4, T5, T7, T8, T9) |
 | Escalations to Opus | 3 (T1, T4-direct, T6) |
 | Human escalations | 1 (T1, resolved by raising turn budgets) |
 | Send-backs (gate passed, criterion unmet) | 1 (T2) |
