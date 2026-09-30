@@ -1,8 +1,9 @@
 # Human escalation record
 
 Copy this file to `.claude/escalations/<task-id>.md` and fill it in when a task
-has exhausted the bounded execution policy — that is, a normal worker failed the
-completion gate **and** the single `escalation-opus` attempt also failed.
+has exhausted the bounded execution policy — either a normal worker followed by
+the single `escalation-opus` attempt failed, or a task assigned directly to
+`escalation-opus` exhausted that single bounded attempt.
 
 This record is informational only. It does not retry anything and it does not
 change any state. The decision to escalate comes from the bounded execution
@@ -25,7 +26,8 @@ policy in `CLAUDE.md`, never from an agent deciding that it "feels stuck".
 ## Worker/model attempts made
 
 <!--
-One row per bounded attempt, in order. Example:
+One row per bounded attempt, in order. A normal escalation path has two rows;
+a task assigned directly to Opus has one. Example:
 
 | # | Worker          | Model  | Outcome                                   |
 |---|-----------------|--------|-------------------------------------------|
