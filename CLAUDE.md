@@ -100,11 +100,12 @@ unit-test suite without changing the verification logic.
 
 ### Harness files vs application files
 
-Everything under `.claude/` is harness. No implementation task may modify it —
-in particular `.claude/hooks/` and `.claude/settings.json`. Harness documentation lives in the repository root `README.md`.
+Everything under `.claude/`, plus the TaskForge execution-policy section in
+this `CLAUDE.md`, is harness. No implementation task may modify those controls —
+in particular `.claude/hooks/` and `.claude/settings.json`.
 
-The repository root belongs to the application. If a specification calls for a
-`README.md`, create it at the root; there is no name collision with the harness
-and no reason to rename it.
+The rest of the repository belongs to the application. If a specification calls
+for a root `README.md`, create or update it normally; the copied TaskForge
+harness does not require a separate README in the application repository.
 
 <!-- END: AGENT EXECUTION SAFETY POLICY -->
