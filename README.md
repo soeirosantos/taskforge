@@ -38,16 +38,25 @@ There is no metrics stack, experiment-arm machinery, sandbox, custom scheduler, 
 
 ## Add TaskForge to a new repository
 
-Clone TaskForge somewhere outside the target repository, then copy the harness:
+Clone TaskForge somewhere outside the target repository.
+
+For a repository that does **not** already contain `.claude/` or `CLAUDE.md`, copy the harness with a guard so existing Claude configuration cannot be overwritten accidentally:
 
 ```bash
 git clone https://github.com/soeirosantos/taskforge.git
 
-cp -R taskforge/.claude /path/to/your-project/
-cp taskforge/CLAUDE.md /path/to/your-project/
+TARGET=/path/to/your-project
+
+if [ -e "$TARGET/.claude" ] || [ -e "$TARGET/CLAUDE.md" ]; then
+  echo "Existing Claude configuration detected. Merge TaskForge manually instead of copying."
+  exit 1
+fi
+
+cp -R taskforge/.claude "$TARGET/"
+cp taskforge/CLAUDE.md "$TARGET/"
 ```
 
-If the target repository already has a `.claude/settings.json` or `CLAUDE.md`, merge the TaskForge sections instead of overwriting unrelated project configuration.
+If the target repository already has Claude configuration, copy the TaskForge files to a temporary location and merge `.claude/settings.json` and `CLAUDE.md` deliberately. Do not overwrite existing hooks, permissions, environment settings, or project instructions.
 
 Make the verification hook executable if your copy process does not preserve file mode:
 
@@ -75,6 +84,16 @@ TEST_COMMAND="npm test"
 ```
 
 The gate fails closed when no test command is configured. A task cannot be closed merely because an agent says it is done.
+
+## Task-tool availability
+
+TaskForge's orchestration policy depends on Claude Code's `TaskCreate`, `TaskUpdate`, `TaskGet`, and `TaskList` tools. The included `.claude/settings.json` sets:
+
+```text
+CLAUDE_CODE_ENABLE_TODO_TOOLS=1
+```
+
+This keeps the task-tracking tools available on newer Claude model families where Claude Code may not expose them by default. If the orchestrator still starts without `TaskCreate` / `TaskUpdate`, stop rather than silently falling back to untracked work.
 
 ## Use it
 
