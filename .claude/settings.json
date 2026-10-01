@@ -1,33 +1,14 @@
 {
   "env": {
-    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
-    "OTEL_METRICS_EXPORTER": "otlp",
-    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
-    "OTEL_METRIC_EXPORT_INTERVAL": "5000"
+    "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1"
   },
   "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/check-arm-ready.sh\"",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
     "TaskCompleted": [
       {
         "hooks": [
           {
             "type": "command",
             "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/verify-unit-tests.sh\"",
-            "timeout": 360
-          },
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/record-task-event.sh\"",
             "timeout": 360
           }
         ]

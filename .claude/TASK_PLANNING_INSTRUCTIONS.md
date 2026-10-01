@@ -392,7 +392,7 @@ Not every repository will have every layer.
 
 Use the verification mechanisms that actually exist.
 
-For this initial experiment, the repository's configured unit-test suite is the minimum global completion gate.
+The repository's configured unit-test suite is the minimum global completion gate.
 
 Do not introduce new coverage, security-severity, performance, or integration-test thresholds as part of planning unless the specification explicitly requires them.
 
@@ -538,10 +538,10 @@ The plan will be reviewed before implementation begins.
 When implementation later runs against this plan, the orchestrator must keep a
 record at `EXECUTION_NOTES.md` and write it before reporting the run complete.
 
-This is required because it has repeatedly caught things no gate did: vacuous
-gate passes, the root cause of a worker's turn exhaustion, and toolchain
-mutations made inside the container that do not survive it. The automated
-records capture outcomes; only this captures *why*.
+This record captures execution context that deterministic gates do not: vacuous
+gate passes, the root cause of a worker's turn exhaustion, and environment or
+toolchain mutations that may affect reproducibility. It preserves *why* a run
+behaved the way it did, not only whether commands passed or failed.
 
 Include:
 
@@ -551,9 +551,9 @@ Include:
 * deterministic evidence for each definition-of-done item, from commands the
   orchestrator ran itself rather than from a worker's report;
 * any gate pass that was **vacuous** — the suite ran but proved nothing;
-* any change made to the container or toolchain during the run, since those do
-  not persist and make the arm non-reproducible;
-* apparatus integrity: confirmation that no task modified anything under
+* any environment or toolchain change made during the run that may affect
+  reproducibility;
+* harness integrity: confirmation that no task modified anything under
   `.claude/`;
 * any specification deviation, with its justification.
 

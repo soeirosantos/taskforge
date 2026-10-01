@@ -32,13 +32,13 @@ add unrelated development instructions inside these delimiters.
   mechanism, so that the `TaskCompleted` hook executes.
 - An agent's textual claim that work is finished is **not** sufficient to
   consider a task complete.
-- The orchestrator's session needs the task tools. The sandbox sets
-  `CLAUDE_CODE_ENABLE_TODO_TOOLS=true`, which is what makes them available in an
-  **interactive** session. (`CLAUDE_CODE_ENABLE_TASKS` is a different switch and
-  does not control this.) If the *orchestrator* lacks `TaskCreate`, that variable
-  is missing — do not fall back to `TodoWrite` and do not run workers untracked;
-  both silently remove what this repository measures. Start a session that has
-  the tools instead.
+- The orchestrator's session needs the task tools. TaskForge sets
+  `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` in `.claude/settings.json` so
+  `TaskCreate` / `TaskUpdate` remain available on models where Claude Code
+  does not expose task-tracking tools by default. (`CLAUDE_CODE_ENABLE_TASKS`
+  is a different switch and does not control model availability.) If the
+  *orchestrator* still lacks `TaskCreate`, do not fall back to `TodoWrite` and
+  do not run workers untracked; start a session with task support available.
 
 ### Delegation
 
@@ -94,20 +94,18 @@ The gate fails closed: a missing, unrunnable, failing, or timed-out test suite
 all refuse task completion. Do not weaken, skip, or delete tests, and do not
 modify the verification script or hook registration, in order to close a task.
 
-The test command and timeout are **not** in the script. They live in
-`.claude/hooks/test-command.conf`, which is the only file expected to differ
-between branches. `verify-unit-tests.sh` must stay byte-for-byte identical on
-every branch so that all experiment arms run the same apparatus:
-`git diff main..<branch> -- .claude/hooks/` should show only the config file.
+The test command and timeout are **not** hard-coded in the script. They live in
+`.claude/hooks/test-command.conf`, so each repository can configure its actual
+unit-test suite without changing the verification logic.
 
 ### Harness files vs application files
 
-Everything under `.claude/` is harness. No implementation task may modify it —
-in particular `.claude/hooks/` and `.claude/settings.json`. Harness
-documentation lives in `.claude/AGENT_CONTROL_README.md`.
+Everything under `.claude/`, plus the TaskForge execution-policy section in
+this `CLAUDE.md`, is harness. No implementation task may modify those controls —
+in particular `.claude/hooks/` and `.claude/settings.json`.
 
-The repository root belongs to the application. If a specification calls for a
-`README.md`, create it at the root; there is no name collision with the harness
-and no reason to rename it.
+The rest of the repository belongs to the application. If a specification calls
+for a root `README.md`, create or update it normally; the copied TaskForge
+harness does not require a separate README in the application repository.
 
 <!-- END: AGENT EXECUTION SAFETY POLICY -->

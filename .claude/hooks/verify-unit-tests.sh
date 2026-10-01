@@ -26,26 +26,21 @@ set -uo pipefail
 # CONFIGURATION
 # =============================================================================
 #
-# This script holds NO per-language configuration, so that it stays byte-for-byte
-# identical across every experiment branch. All values that vary by language live
-# in:
+# Repository-specific verification values live in:
 #
 #     .claude/hooks/test-command.conf
 #
-# `git diff main..experiment/<lang> -- .claude/hooks/` should show that config
-# file and nothing else. If it shows changes to this script, the arms are no
-# longer running the same apparatus and their results are not comparable.
-#
-# Defaults below apply when the config file omits a value. TEST_COMMAND has no
-# default on purpose: an unconfigured gate must fail closed.
+# Keep the gate logic generic and configure the repository's actual test command
+# and timeout in that file. TEST_COMMAND has no default on purpose: an
+# unconfigured gate must fail closed.
 
 TEST_COMMAND=""
 
 # Maximum wall-clock time the suite may run before it is terminated and the task
 # is refused. 300s is a conservative placeholder, not a measured value; override
-# it per branch once a real suite exists. Keep it strictly below the `timeout`
-# configured for this hook in .claude/settings.json, so that this script — not
-# the Claude Code hook handler — is what enforces the limit.
+# it once a real suite exists. Keep it strictly below the `timeout` configured
+# for this hook in .claude/settings.json, so that this script — not the Claude
+# Code hook handler — is what enforces the limit.
 TEST_TIMEOUT_SECONDS=300
 
 # How many trailing lines of test output to surface on failure.
@@ -77,7 +72,7 @@ cd "$PROJECT_DIR" || refuse \
   "Could not enter project directory: $PROJECT_DIR" \
   "The verification gate could not run, so the task must remain incomplete."
 
-# --- Load the per-branch configuration ---------------------------------------
+# --- Load repository verification configuration ------------------------------
 # A config file that exists but cannot be read or parsed is a verification
 # failure, not a reason to fall back to defaults.
 if [ -f "$CONFIG_FILE" ]; then
@@ -105,19 +100,22 @@ if [ -z "$TRIMMED_COMMAND" ]; then
     "" \
     "To fix: set TEST_COMMAND in" \
     "  $CONFIG_FILE" \
-    "to the command that runs this branch's complete unit-test suite, and set" \
+    "to the command that runs this repository's complete unit-test suite, and set" \
     "TEST_TIMEOUT_SECONDS to a value measured from a real run." \
     "" \
-    "Do NOT edit verify-unit-tests.sh to configure this. That script is shared" \
-    "across all experiment branches and must stay identical in every one."
+    "Do NOT edit verify-unit-tests.sh merely to configure a repository. Put" \
+    "repository-specific values in test-command.conf."
 fi
 
 # --- Run the suite under a self-enforced timeout -----------------------------
 LOG_FILE="$(mktemp "${TMPDIR:-/tmp}/taskforge-verify-XXXXXX")" || refuse \
   "Could not create a temporary file to capture test output." \
   "The verification gate could not run, so the task must remain incomplete."
+TIMEOUT_FLAG="$(mktemp "${TMPDIR:-/tmp}/taskforge-timeout-XXXXXX")" || refuse \
+  "Could not create a temporary timeout marker." \
+  "The verification gate could not run, so the task must remain incomplete."
 # shellcheck disable=SC2064
-trap "rm -f '$LOG_FILE'" EXIT
+trap "rm -f '$LOG_FILE' '$TIMEOUT_FLAG'" EXIT
 
 START_TS="$(date +%s)"
 
@@ -137,6 +135,7 @@ set +m 2>/dev/null
     sleep 1
     waited=$((waited + 1))
   done
+  printf 'timeout\n' >"$TIMEOUT_FLAG"
   kill -TERM "-$TEST_PID" 2>/dev/null || kill -TERM "$TEST_PID" 2>/dev/null
   sleep 5
   kill -KILL "-$TEST_PID" 2>/dev/null || kill -KILL "$TEST_PID" 2>/dev/null
@@ -154,14 +153,14 @@ wait "$WATCHDOG_PID" 2>/dev/null
 ELAPSED=$(( $(date +%s) - START_TS ))
 
 # --- Decide ------------------------------------------------------------------
-if [ "$TEST_STATUS" -ne 0 ] && [ "$ELAPSED" -ge "$TEST_TIMEOUT_SECONDS" ]; then
+if [ -s "$TIMEOUT_FLAG" ]; then
   refuse \
     "Unit-test execution exceeded its ${TEST_TIMEOUT_SECONDS}s timeout and was terminated." \
     "Command: $TEST_COMMAND" \
     "Elapsed: ${ELAPSED}s" \
     "" \
     "A suite that does not finish is not a passing suite. Either the tests hang," \
-    "or TEST_TIMEOUT_SECONDS in .claude/hooks/verify-unit-tests.sh is too low for" \
+    "or TEST_TIMEOUT_SECONDS in .claude/hooks/test-command.conf is too low for" \
     "this repository. Investigate before raising the timeout." \
     "" \
     "--- last ${MAX_STDERR_LINES} lines of output before termination ---" \
