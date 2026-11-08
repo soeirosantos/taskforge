@@ -45,6 +45,13 @@ Classify each unknown:
 2. **Reasonable assumption:** a conventional, low-risk choice can be made without meaningfully changing the product. Proceed, but identify the assumption if it matters.
 3. **Implementation discretion:** the choice affects how to build the system without changing its required observable behavior. Leave it to the design/planning phase unless explicitly constrained.
 
+For material decisions, also identify **when and by whom** they must be resolved:
+- **Before specification approval or planning:** the choice changes required behavior, scope, or meaningful task decomposition. Clarify it, or keep affected requirements provisional.
+- **Before implementation or deployment:** the specification can state the constraint or decision boundary without choosing a concrete implementation or operational value yet. Document the decision, responsible decision-maker if known, and the latest checkpoint at which it must be resolved.
+- **Delegated to engineering:** ordinary technical choices that do not alter the behavioral contract; leave them to design/planning without a follow-up question.
+
+Do not treat every deferred deployment or implementation decision as a blocker for drafting or planning. Do not treat an unresolved behavioral decision as mere engineering discretion.
+
 When clarification is needed:
 - Ask **at most three focused questions in one round**, prioritizing the most consequential. A later round is justified only by new blocking information.
 - For each question, explain the decision it changes. Provide a concise recommended default only when a defensible default exists.
@@ -68,8 +75,10 @@ Use this as an **internal coverage checklist**, not a document template to fill 
 | Interfaces | API/CLI/UI/events, input validation, output shape, errors |
 | Data | Ownership, schema implications, persistence, integrity, retention, migration |
 | State and lifecycle | Allowed transitions, retries, cancellation, ordering, restart behavior |
+| Invariants and integrity | Guarantees that must remain true across operations, relationships, and concurrent changes |
 | Concurrency and reliability | Atomicity, idempotency, race behavior, failure and recovery |
 | Security and privacy | Authentication, authorization, trust boundaries, secret exposure, data sensitivity |
+| Usability and accessibility | Relevant user journeys, keyboard use, form labeling, feedback, and error states |
 | Performance and capacity | Only concrete expectations justified by user needs or existing contracts |
 | Integration | External systems, dependencies, compatibility, deployment/rollout implications |
 | Operability | Configuration, logging, observability, shutdown, supportability |
@@ -78,6 +87,8 @@ Use this as an **internal coverage checklist**, not a document template to fill 
 Do not add unsupported numeric limits or a new testing/security standard just to complete a row.
 
 For systems with asynchronous work, shared mutable state, or external side effects, explicitly examine race conditions, retries, partial failures, and recovery even when they were not named in the prompt. Surface decisions rather than inventing policy.
+
+Identify system-wide **invariants** when correctness depends on guarantees that span operations, records, or states (for example, stable identifiers, an acyclic hierarchy, or an audit event for every committed change). State them explicitly and make them verifiable; do not assume a successful happy-path scenario demonstrates that they always hold.
 
 For modifications to existing behavior, explicitly state what remains unchanged.
 
@@ -93,6 +104,8 @@ Follow OpenSpec's requirement and scenario conventions when possible.
 - Define observable outcomes, including error behavior, without unnecessarily mandating internal structure.
 - Specify external technical contracts when required by the user or existing compatibility obligations.
 - Avoid speculative requirements, pseudocode, internal classes/functions, and arbitrary tool choices.
+- For substantial features or systems, consider a small number of **end-to-end success scenarios** spanning several requirements, in addition to the requirement-level scenarios. Describe the observable user or operator outcome, not an implementation script. Avoid duplicating requirement scenarios for simple changes.
+- Use stable requirement identifiers and a compact mapping from end-to-end scenarios to the requirements they exercise when traceability will materially help planning or verification. IDs and traceability tables are optional, not boilerplate.
 
 Example:
 
@@ -134,10 +147,11 @@ Produce **`SPEC.md`** or the specification path the user explicitly requests. Us
 #### Scenario: <scenario name>
 ## Interfaces and data contracts         <!-- if relevant -->
 ## State, reliability, and security       <!-- if relevant -->
+## Invariants                             <!-- when cross-cutting guarantees matter -->
 ## Compatibility and migration            <!-- if relevant -->
 ## Assumptions
-## Open decisions                         <!-- only if present -->
-## Acceptance and verification
+## Open decisions                         <!-- only if present; include decision checkpoints -->
+## Acceptance and verification            <!-- add end-to-end success scenarios when useful -->
 ## Readiness
 ```
 
@@ -147,7 +161,7 @@ Under **Readiness**, state one of:
 - `Ready for TaskForge planning` — no unresolved decision changes behavior, scope, or task breakdown.
 - `Provisional — requires decisions` — identify the blocking decisions and the affected requirements.
 
-Define acceptance in terms of observable outcomes and feasible deterministic evidence. Mention existing build/test commands when known, but leave precise task-level verification and execution waves to TaskForge's planner.
+Define acceptance in terms of observable outcomes and feasible deterministic evidence. For larger systems, capture representative end-to-end workflows and, where useful, link them to stable requirement IDs. Mention existing build/test commands when known, but leave precise task-level verification and execution waves to TaskForge's planner.
 
 ### B. Project already using native OpenSpec
 
@@ -165,10 +179,11 @@ Check the draft against the original prompt and repository context.
 
 - **Coverage:** Every stated feature and constraint is represented; relevant missing cases were considered.
 - **No invention:** Each normative requirement is traceable to user intent, existing behavior, a necessary consequence, or an explicit user-approved decision.
-- **Consistency:** Scenarios, states, data, interfaces, invariants, and exclusions do not contradict one another.
-- **Testability:** A reviewer can distinguish compliant from noncompliant behavior.
+- **Consistency:** Scenarios, states, data, interfaces, invariants, and exclusions do not contradict one another; cross-operation invariants are explicit where necessary.
+- **Testability:** A reviewer can distinguish compliant from noncompliant behavior; for substantial systems, end-to-end success can also be demonstrated.
+- **Human use:** Relevant usability and accessibility concerns have been considered for user-facing workflows.
 - **Boundaries:** Implementation freedom is preserved except where necessary.
-- **Ambiguity:** Blocking decisions are surfaced; low-risk assumptions are labeled.
+- **Ambiguity:** Blocking decisions are surfaced; low-risk assumptions and deferred decisions have clear checkpoints.
 - **Proportionality:** No boilerplate, speculative complexity, or redundant scenarios.
 
 Do not declare the specification ready if a known unresolved choice would materially change product behavior or task decomposition. Do not block readiness over ordinary implementation discretion.
