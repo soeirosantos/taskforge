@@ -114,7 +114,7 @@ The authoring phase examines relevant repository context, drafts only requiremen
 
 Review and approve the specification before planning. This phase does not create implementation tasks or run workers.
 
-The conventions follow [OpenSpec](https://openspec.dev/) for behavioral requirements and scenarios. Projects already using native OpenSpec should keep their existing OpenSpec artifacts and schema; TaskForge does not require installing OpenSpec and does not replace its task artifacts with a second plan.
+The conventions follow [OpenSpec](https://openspec.dev/) for behavioral requirements and scenarios. Projects already using native OpenSpec should keep their existing artifacts and schema. TaskForge does not install OpenSpec or create a separate `tasks.md` during specification authoring; its existing planning phase handles implementation breakdown.
 
 If an approved specification already exists, skip this phase.
 
