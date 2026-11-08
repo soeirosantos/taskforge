@@ -4,6 +4,7 @@ TaskForge is a small, repository-local execution policy for bounded agentic soft
 
 It is intentionally **not** an agent platform. Claude Code provides the runtime, task system, subagents, tools, and hooks. TaskForge adds an opinionated workflow around those primitives:
 
+- turn informal descriptions into reviewable, testable specifications;
 - inspect the repository before planning;
 - decompose specifications into bounded, dependency-aware tasks;
 - route work to a suitable worker profile;
@@ -19,6 +20,7 @@ The reusable harness is:
 
 ```text
 .claude/
+  SPEC_AUTHORING_INSTRUCTIONS.md
   TASK_PLANNING_INSTRUCTIONS.md
   agents/
     worker-haiku.md
@@ -97,22 +99,42 @@ This keeps the task-tracking tools available on newer Claude model families wher
 
 ## Use it
 
-### 1. Plan
+### 1. Specify
 
-Start Claude Code in the target repository and provide the specification with:
+For an informal or incomplete feature request, start Claude Code in the target repository and ask it to produce a specification:
+
+```text
+Follow .claude/SPEC_AUTHORING_INSTRUCTIONS.md.
+
+Create a specification for:
+<informal feature or system description>
+```
+
+The authoring phase examines relevant repository context, drafts only requirements that matter to the requested scope, and asks focused follow-up questions **only when a material decision cannot be safely resolved**. It may proceed with documented low-risk assumptions and leave internal design choices to planning. The default output is a reviewable `SPEC.md` with testable requirements and scenarios; unresolved blocking decisions are labeled *provisional*.
+
+Review and approve the specification before planning. This phase does not create implementation tasks or run workers.
+
+The conventions follow [OpenSpec](https://openspec.dev/) for behavioral requirements and scenarios. Projects already using native OpenSpec should keep their existing artifacts and schema. TaskForge does not install OpenSpec or create a separate `tasks.md` during specification authoring; its existing planning phase handles implementation breakdown.
+
+If an approved specification already exists, skip this phase.
+
+### 2. Plan
+
+Provide the approved specification to Claude Code:
 
 ```text
 Follow .claude/TASK_PLANNING_INSTRUCTIONS.md.
 
-The specification is:
-<your specification>
+The approved specification is in SPEC.md. Read it in full before planning.
 ```
+
+You can also paste the specification directly into the planning prompt, as before. For a project using native OpenSpec, point the planner at the approved capability/change specs instead of creating a redundant `SPEC.md`.
 
 The planning phase inspects the repository, produces bounded implementation tasks, assigns worker profiles, identifies dependencies and safe parallelization, defines acceptance criteria and verification, and then stops.
 
 Review the plan before implementation.
 
-### 2. Implement
+### 3. Implement
 
 After reviewing the plan:
 
